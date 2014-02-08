@@ -3,13 +3,27 @@ from django.http import HttpResponse
 
 from redis import Redis
 
-from .util import json_response
+from tweet_count.util import json_response
+from tweet_count.tasks import collect
 
 redis = Redis.from_url(settings.REDIS_GENERAL)
 
 
 def index(request):
     return HttpResponse('placeholder')
+
+
+@json_response
+def control(request):
+    action = request.GET.get('action', 'status')
+
+    if action == 'start':
+        collect.delay()
+    
+    elif action == 'stop':
+        redis.publish('collect', 'abort')
+
+    return {'status': redis.get('collect_status')}
 
 
 @json_response
