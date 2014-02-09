@@ -1,9 +1,11 @@
 from __future__ import absolute_import
+import json
 
 from birdy.twitter import StreamClient
 from celery.signals import celeryd_after_setup
 from celery.utils.log import get_task_logger
 from django.conf import settings
+from django_sse.redisqueue import send_event
 from redis import Redis
 import gevent
 from tweet_count.celery import celery
@@ -18,6 +20,11 @@ def listen_for_abort(task):
     for msg in pubsub.listen():
         if msg.get('data') == 'abort':
             task.abort = True
+
+
+def collect_status(state):
+    redis.set('collect_status', state)
+    send_event('celery_status', state)
 
 
 @celery.task(bind=True)
@@ -43,7 +50,7 @@ def collect(self, track='charity'):
     self.abort = False
     gevent.spawn(listen_for_abort, self)
 
-    redis.set('collect_status', 'Running')
+    collect_status('Running')
     client = StreamClient(
         settings.TWITTER['CONSUMER_KEY'],
         settings.TWITTER['CONSUMER_SECRET'],
@@ -63,7 +70,7 @@ def collect(self, track='charity'):
             # Remove any locks we may have made
             logger.info('Stopping task')
             redis.delete('collect_lock')
-            redis.set('collect_status', 'Stopped')
+            collect_status('Stopped')
             return
 
 
@@ -77,7 +84,8 @@ def process(tweet):
     for tag in tweet['entities']['hashtags']:
         hashtag = tag['text'].encode('utf8').lower()
         result = redis.zincrby('hashtags', hashtag, 1)
-        logger.info('Incremented #%s: %s' % (hashtag, result))
+        # logger.info('Incremented #%s: %s' % (hashtag, result))
+        send_event('increment', json.dumps([hashtag, int(result)]))
 
 
 @celeryd_after_setup.connect
@@ -89,4 +97,4 @@ def release_locks(*a, **kw):
     tasks from running.
     """
     redis.delete('collect_lock')
-    redis.set('collect_status', 'Stopped')
+    collect_status('Stopped')

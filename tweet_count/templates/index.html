@@ -1,0 +1,52 @@
+{% load staticfiles %}
+<html>
+<head>
+  <title>Hello</title>
+  <link rel="stylesheet" href="{% static 'foundation/normalize.css' %}"></link>
+  <link rel="stylesheet" href="{% static 'foundation/foundation.min.css' %}"></link>
+
+  <style>
+    .container { margin: 20px; }
+    .celery { text-align: center; }
+    .row { margin-bottom: 20px; }
+  </style>
+
+</head>
+<body>
+
+  <div class="container">
+    <div class="row">
+      <div class="celery small-centered small-12 columns">
+        <p>Task status: <span class="status" data-bind="text: celery.state">Unknown</span></p>
+        <a href="#" class="start button radius tiny success">Start</a>
+        <a href="#" class="stop button radius tiny alert">Stop</a>
+      </div>
+    </div>
+
+
+    <div class="row">
+      <table class="hashtags small-8 columns small-centered medium-3">
+        <tbody>
+          <!-- ko ifnot: hashtags().length -->
+          <tr>
+            <td>No data collected yet</td>
+          </tr>
+          <!-- /ko -->
+          <!-- ko foreach: hashtags -->
+          <tr data-bind="attr: {'class': $data.hashtag}">
+            <td data-bind="text: $data.count"></td>
+            <td><a data-bind="text: '#' + $data.hashtag, attr: {'href': 'https://twitter.com/search?q=%23' + $data.hashtag}"></a></td>
+          </tr>
+          <!-- /ko -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</body>
+
+<script src="{% static 'jquery-2.1.0.min.js' %}"></script>
+<script src="{% static 'knockout.js' %}"></script>
+<script src="{% static 'tc.js' %}"></script>
+
+</html>

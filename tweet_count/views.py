@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.http import HttpResponse
+from django.shortcuts import render
 
 from redis import Redis
 
@@ -10,7 +10,7 @@ redis = Redis.from_url(settings.REDIS_GENERAL)
 
 
 def index(request):
-    return HttpResponse('placeholder')
+    return render(request, 'index.html')
 
 
 @json_response
@@ -32,6 +32,8 @@ def count(request):
         'hashtags',
         min=1,
         max='+inf',
+        start=0,
+        num=50,
         withscores=True,
         score_cast_func=int,
     )

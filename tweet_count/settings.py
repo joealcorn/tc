@@ -10,6 +10,7 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+from urlparse import urlparse
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 
@@ -30,12 +31,24 @@ DEBUG = envbool('DEBUG')
 
 TEMPLATE_DEBUG = DEBUG
 
+TEMPLATE_DIRS = (
+    'tweet_count/templates',
+)
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "tweet_count/static"),
+
+)
+
 ALLOWED_HOSTS = []
 
 
 # Application definition
 
-INSTALLED_APPS = ('django.contrib.staticfiles',)
+INSTALLED_APPS = (
+    'django.contrib.staticfiles',
+    'devserver',
+)
 
 MIDDLEWARE_CLASSES = []
 
@@ -63,4 +76,10 @@ TWITTER = {
     'CONSUMER_SECRET': os.environ['CONSUMER_SECRET'],
     'ACCESS_TOKEN': os.environ['ACCESS_TOKEN'],
     'ACCESS_SECRET': os.environ['ACCESS_SECRET'],
+}
+
+sseq = urlparse(REDIS_GENERAL)
+REDIS_SSEQUEUE_CONNECTION_SETTINGS = {
+    'location': sseq.netloc,
+    'db': int(sseq.path.split('/')[1]),
 }
